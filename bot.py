@@ -20,10 +20,7 @@ def set_function(bot: Bot, update: Update, user_data: dict):
     watcher = Watcher(name, url, update)
     if len(args) > 3:
         watcher.selector = args[3]
-        if '/' in watcher.selector:
-            watcher.type = Selector.XPATH
-        else:
-            watcher.type = Selector.CSS
+        watcher.type = Selector.CSS
     else:
         watcher.type = Selector.NONE
     user_data[name] = watcher
@@ -67,12 +64,49 @@ def list_function(bot: Bot, update, user_data):
     bot.send_message(chat_id=chat_id, text=text)
 
 
+def start_function(bot, update, user_data):
+    chat_id = update.message.chat_id
+    args = update.message.text.split(" ")
+    if len(args) > 1:
+        name = args[1]
+        if name in user_data:
+            watcher: Watcher = user_data[name]
+            if not watcher.isRunning:
+                watcher.start()
+                bot.send_message(chat_id=chat_id, text="The notifier {0} now is running".format(name))
+            else:
+                bot.send_message(chat_id=chat_id, text="The notifier {0} is already running".format(name))
+        else:
+            bot.send_message(chat_id=chat_id, text="The notifier {0} doesn't exist".format(name))
+    else:
+        bot.send_message(chat_id=chat_id, text="Insert the notifier name that you want to start")
+
+
+def stop_function(bot, update, user_data):
+    chat_id = update.message.chat_id
+    args = update.message.text.split(" ")
+    if len(args) > 1:
+        name = args[1]
+        if name in user_data:
+            watcher: Watcher = user_data[name]
+            if watcher.isRunning:
+                watcher.stop()
+                bot.send_message(chat_id=chat_id, text="The notifier {0} now is stopped".format(name))
+            else:
+                bot.send_message(chat_id=chat_id, text="The notifier {0} is already stopped".format(name))
+        else:
+            bot.send_message(chat_id=chat_id, text="The notifier {0} doesn't exist".format(name))
+    else:
+        bot.send_message(chat_id=chat_id, text="Insert the notifier name that you want to start")
+
+
 updater = Updater(token=TOKEN)
 updater.dispatcher.add_handler(CommandHandler('set', set_function, pass_user_data=True))
 updater.dispatcher.add_handler(CommandHandler('del', del_function, pass_user_data=True))
 updater.dispatcher.add_handler(CommandHandler('clear', clear_function, pass_user_data=True))
 updater.dispatcher.add_handler(CommandHandler('list', list_function, pass_user_data=True))
-
+updater.dispatcher.add_handler(CommandHandler('start', start_function, pass_user_data=True))
+updater.dispatcher.add_handler(CommandHandler('stop', stop_function, pass_user_data=True))
 
 updater.start_polling()
 

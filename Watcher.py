@@ -1,12 +1,15 @@
+import time
 from enum import Enum
 from multiprocessing import Process
 
+import requests
+from bs4 import BeautifulSoup
 from telegram import Update
 
 
 class Selector(Enum):
     CSS = 1
-    XPATH = 2
+    # XPATH = 2
     NONE = 3
 
 
@@ -19,6 +22,8 @@ class Watcher:
     update: Update
 
     thread: Process
+    old_text: str
+    isRunning: bool
 
     def __init__(self, name, url, update):
         self.name = name
@@ -27,19 +32,54 @@ class Watcher:
         self.type = None
         self.enabled = True
         self.update = update
-
-        self.thread = Process(target=thread_function, args=(self,))
+        self.old_text = None
+        self.isRunning = False
 
     def __str__(self):
         type_str = "{0}({1})".format(self.selector, str(self.type)) if self.selector is not None else str(self.type)
         return "{0}: ({1}) {2}".format(self.name, self.url, type_str)
 
     def start(self):
-        self.thread.start()
+        try:
+            self.thread = Process(target=thread_function, args=(self,))
+            self.thread.start()
+            self.isRunning = True
+        except Exception as e:
+            print(e)
 
     def stop(self):
         self.thread.terminate()
+        self.isRunning = False
 
 
 def thread_function(watcher: Watcher):
-    pass
+    print("thread function started for" + str(watcher))
+    while True:
+        try:
+            html = requests.get(watcher.url).text
+            soup = BeautifulSoup(html, 'html.parser')
+            text = ""
+            if watcher.type == Selector.CSS:
+                elements = soup.select(watcher.selector)
+                for elem in elements:
+                    text += elem.text + "\n"
+            else:
+                text = soup.text
+
+            if watcher.old_text is None:
+                watcher.old_text = text
+            else:
+                if watcher.old_text != text:
+                    watcher.old_text = text
+                    watcher.update.message.reply_text("Notifier {0} has seen new changes! Go to see them:\n{1}"
+                                                      .format(watcher.name, watcher.url))
+            time.sleep(3600)    # wait 1 hour
+        except Exception as e:
+            print(e)
+
+
+if __name__ == '__main__':
+    watcher = Watcher('prova', 'https://dgtread.com/reader/series/shingeki-no-kyojin', None)
+    watcher.selector = 'div.chapter_list'
+    watcher.type = Selector.NONE
+    thread_function(watcher)

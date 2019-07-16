@@ -1,1 +1,1 @@
-TOKEN = 'insert telegram token here'
+TOKEN = '672873092:AAHf-wioJOJaHmkZEAYc0OeSo0EuSbDvGrA'

@@ -14,16 +14,16 @@ class Selector(Enum):
 
 
 class Watcher:
-    name: str
-    url: str
-    type: Selector
-    selector: str
-    enabled: bool
-    update: Update
+    name = ""
+    url = ""
+    type = None
+    selector = None
+    enabled = None
+    update = None
 
-    thread: Process
-    old_text: str
-    isRunning: bool
+    thread = None
+    old_text = None
+    isRunning = None
 
     def __init__(self, name, url, update):
         self.name = name

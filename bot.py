@@ -70,7 +70,7 @@ def start_function(bot, update, user_data):
     if len(args) > 1:
         name = args[1]
         if name in user_data:
-            watcher: Watcher = user_data[name]
+            watcher = user_data[name]
             if not watcher.isRunning:
                 watcher.start()
                 bot.send_message(chat_id=chat_id, text="The notifier {0} now is running".format(name))
@@ -88,7 +88,7 @@ def stop_function(bot, update, user_data):
     if len(args) > 1:
         name = args[1]
         if name in user_data:
-            watcher: Watcher = user_data[name]
+            watcher = user_data[name]
             if watcher.isRunning:
                 watcher.stop()
                 bot.send_message(chat_id=chat_id, text="The notifier {0} now is stopped".format(name))

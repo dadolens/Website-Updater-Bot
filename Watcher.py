@@ -76,10 +76,3 @@ def thread_function(watcher: Watcher):
             time.sleep(3600)    # wait 1 hour
         except Exception as e:
             print(e)
-
-
-if __name__ == '__main__':
-    watcher = Watcher('prova', 'https://dgtread.com/reader/series/shingeki-no-kyojin', None)
-    watcher.selector = 'div.chapter_list'
-    watcher.type = Selector.NONE
-    thread_function(watcher)

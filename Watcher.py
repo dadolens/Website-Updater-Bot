@@ -19,7 +19,7 @@ class Watcher:
     type = None
     selector = None
     enabled = None
-    update = None
+    update: Update = None
 
     thread = None
     old_text = None
@@ -73,6 +73,6 @@ def thread_function(watcher: Watcher):
                     watcher.old_text = text
                     watcher.update.message.reply_text("Notifier {0} has seen new changes! Go to see them:\n{1}"
                                                       .format(watcher.name, watcher.url))
-            time.sleep(3600)    # wait 1 hour
+            time.sleep(900)    # wait 15 minutes
         except Exception as e:
             print(e)

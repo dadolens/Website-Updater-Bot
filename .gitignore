@@ -6,3 +6,6 @@ venv/
 config\.py
 
 __pycache__/
+
+token.*
+*.pkl

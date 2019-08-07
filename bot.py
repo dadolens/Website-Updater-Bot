@@ -1,11 +1,21 @@
+import time
+from threading import Thread
+
 from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler
 
+from WatcherManager import WatcherManager
 from Watcher import Watcher, Selector
-from config import TOKEN
+
+file = open("token.txt", "r")
+TOKEN = file.read()
+file.close()
+
+watcher_manager = WatcherManager()
+watcher_manager.load_watcher()
 
 
-def set_function(bot: Bot, update: Update, user_data: dict):
+def set_function(bot: Bot, update: Update):
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 2:
@@ -14,21 +24,22 @@ def set_function(bot: Bot, update: Update, user_data: dict):
         return
 
     name, url = args[1], args[2]
-    if name in user_data:
-        bot.send_message(chat_id=chat_id, text="Notifier {0} already exists. Please delete it".format(name))
-        return
     watcher = Watcher(name, url, update)
     if len(args) > 3:
         watcher.selector = args[3]
         watcher.type = Selector.CSS
     else:
         watcher.type = Selector.NONE
-    user_data[name] = watcher
+    ok = watcher_manager.add_watcher(chat_id, watcher)
+    if ok:
+        bot.send_message(chat_id=chat_id, text="Notifier {0} correctly created! (SELECTOR: {1})"
+                         .format(watcher.name, watcher.type))
+        print("{0}: watcher {1} created.".format(chat_id, name))
+    else:
+        bot.send_message(chat_id=chat_id, text="Notifier {0} already exists. Please delete it".format(name))
 
-    bot.send_message(chat_id=chat_id, text="Notifier {0} correctly created! (SELECTOR: {1})".format(watcher.name, watcher.type))
 
-
-def del_function(bot: Bot, update, user_data):
+def del_function(bot: Bot, update):
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 2:
@@ -37,44 +48,40 @@ def del_function(bot: Bot, update, user_data):
         return
 
     name = args[1]
-    if name in user_data:
-        del user_data[name]
+    ok = watcher_manager.delete_watcher(chat_id, name)
+    if ok:
         bot.send_message(chat_id=chat_id, text="Notifier {0} deleted!".format(name))
     else:
         bot.send_message(chat_id=chat_id, text="Notifier {0} not found.".format(name))
 
 
-def clear_function(bot: Bot, update, user_data: dict):
+def clear_function(bot: Bot, update):
     chat_id = update.message.chat_id
-    if len(user_data) > 0:
-        user_data.clear()
-        bot.send_message(chat_id=chat_id, text="All notifiers are deleted")
-    else:
-        bot.send_message(chat_id=chat_id, text="No notifiers available to be deleted")
+    watcher_manager.clear_watcher(chat_id)
+    bot.send_message(chat_id=chat_id, text="All notifiers are deleted")
 
 
-def list_function(bot: Bot, update, user_data):
+def list_function(bot: Bot, update):
     chat_id = update.message.chat_id
-    if len(user_data) > 0:
+    watchers = watcher_manager.get_watchers(chat_id)
+    if len(watchers) > 0:
         text = ""
-        for name, watcher in user_data.items():
+        for watcher in watchers:
             text += str(watcher) + "\n"
     else:
         text = "No notifiers available"
     bot.send_message(chat_id=chat_id, text=text)
 
 
-def start_function(bot, update, user_data):
+def start_function(bot, update):
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:
         name = args[1]
-        if name in user_data:
-            watcher = user_data[name]
-            if not watcher.isRunning:
-                watcher.start()
+        ok = watcher_manager.start_watcher(chat_id, name)
+        if ok == "started":
                 bot.send_message(chat_id=chat_id, text="The notifier {0} now is running".format(name))
-            else:
+        elif ok == "already":
                 bot.send_message(chat_id=chat_id, text="The notifier {0} is already running".format(name))
         else:
             bot.send_message(chat_id=chat_id, text="The notifier {0} doesn't exist".format(name))
@@ -82,17 +89,15 @@ def start_function(bot, update, user_data):
         bot.send_message(chat_id=chat_id, text="Insert the notifier name that you want to start")
 
 
-def stop_function(bot, update, user_data):
+def stop_function(bot, update):
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:
         name = args[1]
-        if name in user_data:
-            watcher = user_data[name]
-            if watcher.isRunning:
-                watcher.stop()
-                bot.send_message(chat_id=chat_id, text="The notifier {0} now is stopped".format(name))
-            else:
+        ok = watcher_manager.stop_watcher(chat_id, name)
+        if ok == "stopped":
+            bot.send_message(chat_id=chat_id, text="The notifier {0} now is stopped".format(name))
+        elif ok == "already":
                 bot.send_message(chat_id=chat_id, text="The notifier {0} is already stopped".format(name))
         else:
             bot.send_message(chat_id=chat_id, text="The notifier {0} doesn't exist".format(name))
@@ -100,15 +105,27 @@ def stop_function(bot, update, user_data):
         bot.send_message(chat_id=chat_id, text="Insert the notifier name that you want to start")
 
 
+def backup():
+    while True:
+        time.sleep(60)
+        watcher_manager.save_watcher()
+
+
 updater = Updater(token=TOKEN)
-updater.dispatcher.add_handler(CommandHandler('set', set_function, pass_user_data=True))
-updater.dispatcher.add_handler(CommandHandler('del', del_function, pass_user_data=True))
-updater.dispatcher.add_handler(CommandHandler('clear', clear_function, pass_user_data=True))
-updater.dispatcher.add_handler(CommandHandler('list', list_function, pass_user_data=True))
-updater.dispatcher.add_handler(CommandHandler('start', start_function, pass_user_data=True))
-updater.dispatcher.add_handler(CommandHandler('stop', stop_function, pass_user_data=True))
+updater.dispatcher.add_handler(CommandHandler('set', set_function))
+updater.dispatcher.add_handler(CommandHandler('del', del_function))
+updater.dispatcher.add_handler(CommandHandler('clear', clear_function))
+updater.dispatcher.add_handler(CommandHandler('list', list_function))
+updater.dispatcher.add_handler(CommandHandler('start', start_function))
+updater.dispatcher.add_handler(CommandHandler('stop', stop_function))
 
 updater.start_polling()
-
 print("Bot started!")
+
+watcher_manager.restart()
+
+# set watchers backup
+t = Thread(target=backup)
+t.start()
+
 updater.idle()

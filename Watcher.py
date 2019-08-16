@@ -3,7 +3,6 @@ from enum import Enum
 from multiprocessing import Process
 
 import requests
-from bs4 import BeautifulSoup
 from telegram import Update
 
 

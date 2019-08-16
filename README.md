@@ -2,8 +2,10 @@
 
 A telegram bot that notifies when a web page (or a piece of it) change.
 
-==Requirements==
+###Requirements
 This bot has some dependency. To install them, run
 
-<syntaxhighlight lang="shell">
-pip install beautifulsoup4 python-telegram-bot requests
+```bash
+pip install python-telegram-bot requests joblib selenium --user
+```
+Also, for selenium, is necessary to be installed a supported browser and its drivers. For more information, click <a href='https://pypi.org/project/selenium/'>here</a>.

@@ -4,6 +4,8 @@ from threading import Thread
 from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler
 
+from selenium import webdriver
+
 from WatcherManager import WatcherManager
 from Watcher import Watcher, Selector
 
@@ -12,6 +14,11 @@ TOKEN = file.read()
 file.close()
 
 watcher_manager = WatcherManager()
+# start selenium
+browser = webdriver.Firefox()
+# save the browser in the watcher manager
+WatcherManager.browser = browser
+
 watcher_manager.load_watcher()
 
 
@@ -122,6 +129,7 @@ updater.dispatcher.add_handler(CommandHandler('stop', stop_function))
 updater.start_polling()
 print("Bot started!")
 
+# restart website watchers
 watcher_manager.restart()
 
 # set watchers backup

@@ -4,6 +4,8 @@ import Watcher
 
 
 class WatcherManager:
+    browser = None
+
     def __init__(self):
         self.watchers: dict = {}        # chat-id -> list of watchers
 

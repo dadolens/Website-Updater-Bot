@@ -4,8 +4,6 @@ from threading import Thread
 from telegram import Bot, Update
 from telegram.ext import Updater, CommandHandler
 
-from selenium import webdriver
-
 from WatcherManager import WatcherManager
 from Watcher import Watcher, Selector
 
@@ -14,12 +12,6 @@ TOKEN = file.read()
 file.close()
 
 watcher_manager = WatcherManager()
-# start selenium
-browser = webdriver.Firefox()
-# save the browser in the watcher manager
-WatcherManager.browser = browser
-
-watcher_manager.load_watcher()
 
 
 def set_function(bot: Bot, update: Update):
@@ -27,20 +19,20 @@ def set_function(bot: Bot, update: Update):
     args = update.message.text.split(" ")
     if len(args) < 2:
         bot.send_message(chat_id=chat_id, text="Invalid message. Command pattern is:")
-        bot.send_message(chat_id=chat_id, text="/set name URL [XPATH/CSS SELECTOR]")
+        bot.send_message(chat_id=chat_id, text="/set name URL [CSS SELECTOR]")
         return
 
     name, url = args[1], args[2]
     watcher = Watcher(name, url, update)
     if len(args) > 3:
-        watcher.selector = args[3]
+        watcher.selector = " ".join(args[3:])
         watcher.type = Selector.CSS
     else:
         watcher.type = Selector.NONE
     ok = watcher_manager.add_watcher(chat_id, watcher)
     if ok:
-        bot.send_message(chat_id=chat_id, text="Notifier {0} correctly created! (SELECTOR: {1})"
-                         .format(watcher.name, watcher.type))
+        bot.send_message(chat_id=chat_id, text="Notifier {0} correctly created! (SELECTOR: '{1}' ({2}))"
+                         .format(watcher.name, watcher.selector, watcher.type))
         print("{0}: watcher {1} created.".format(chat_id, name))
     else:
         bot.send_message(chat_id=chat_id, text="Notifier {0} already exists. Please delete it".format(name))
@@ -87,9 +79,9 @@ def start_function(bot, update):
         name = args[1]
         ok = watcher_manager.start_watcher(chat_id, name)
         if ok == "started":
-                bot.send_message(chat_id=chat_id, text="The notifier {0} now is running".format(name))
+            bot.send_message(chat_id=chat_id, text="The notifier {0} now is running".format(name))
         elif ok == "already":
-                bot.send_message(chat_id=chat_id, text="The notifier {0} is already running".format(name))
+            bot.send_message(chat_id=chat_id, text="The notifier {0} is already running".format(name))
         else:
             bot.send_message(chat_id=chat_id, text="The notifier {0} doesn't exist".format(name))
     else:
@@ -105,7 +97,7 @@ def stop_function(bot, update):
         if ok == "stopped":
             bot.send_message(chat_id=chat_id, text="The notifier {0} now is stopped".format(name))
         elif ok == "already":
-                bot.send_message(chat_id=chat_id, text="The notifier {0} is already stopped".format(name))
+            bot.send_message(chat_id=chat_id, text="The notifier {0} is already stopped".format(name))
         else:
             bot.send_message(chat_id=chat_id, text="The notifier {0} doesn't exist".format(name))
     else:
@@ -115,7 +107,7 @@ def stop_function(bot, update):
 def backup():
     while True:
         time.sleep(60)
-        watcher_manager.save_watcher()
+        watcher_manager.save_watchers()
 
 
 updater = Updater(token=TOKEN)
@@ -126,14 +118,17 @@ updater.dispatcher.add_handler(CommandHandler('list', list_function))
 updater.dispatcher.add_handler(CommandHandler('start', start_function))
 updater.dispatcher.add_handler(CommandHandler('stop', stop_function))
 
-updater.start_polling()
-print("Bot started!")
-
-# restart website watchers
-watcher_manager.restart()
-
 # set watchers backup
 t = Thread(target=backup)
 t.start()
 
+# start watchers thread
+watcher_manager.start()
+
+# start telegram
+updater.start_polling()
+print("Bot started!")
+
+# start idle
 updater.idle()
+

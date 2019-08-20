@@ -8,7 +8,7 @@ from WatcherManager import WatcherManager
 from Watcher import Watcher, Selector
 
 file = open("token.txt", "r")
-TOKEN = file.read()
+TOKEN = file.read().strip()
 file.close()
 
 watcher_manager = WatcherManager()

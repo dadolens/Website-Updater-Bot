@@ -10,3 +10,5 @@ __pycache__/
 token.*
 *.pkl
 *.log
+
+path_phantom_js.txt

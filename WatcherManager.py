@@ -1,15 +1,13 @@
 import sys
 import time
-import os
 from threading import Lock, Thread
 from selenium import webdriver
 import joblib
 
 import Watcher
 
+PATH_PHANTOM = open("path_phantom_js.txt").read().strip()
 TIMER = 2
-# hide firefox window
-os.environ['MOZ_HEADLESS'] = '1'
 
 
 class WatcherManager:
@@ -144,7 +142,7 @@ def thread_function(watchers_manager: WatcherManager):
         print(LOG, "start updating watchers")
         try:
             # start selenium browser
-            browser = webdriver.Firefox()
+            browser = webdriver.PhantomJS(executable_path=PATH_PHANTOM)
             # for each watcher
             for user_watchers in watchers_manager.watchers.values():
                 for watcher in user_watchers:

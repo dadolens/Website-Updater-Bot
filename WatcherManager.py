@@ -5,7 +5,7 @@ from selenium import webdriver
 import joblib
 
 import Watcher
-from utils import TAG, PATH_PHANTOM, TIMER
+from utils import TAG, PATH_PHANTOM, TIMER, flush
 
 
 class WatcherManager:
@@ -171,4 +171,5 @@ def thread_function(watchers_manager: WatcherManager):
             # release lock
             watchers_manager.watchers_lock.release()
             # wait for next iteration
+        flush()
         time.sleep(TIMER)

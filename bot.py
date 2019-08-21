@@ -6,7 +6,7 @@ from telegram.ext import Updater, CommandHandler
 
 from WatcherManager import WatcherManager
 from Watcher import Watcher, Selector
-from utils import TAG
+from utils import TAG, flush
 
 file = open("token.txt", "r")
 TOKEN = file.read().strip()
@@ -39,6 +39,8 @@ def set_function(bot: Bot, update: Update):
     else:
         bot.send_message(chat_id=chat_id, text="Notifier {0} already exists. Please delete it".format(name))
 
+    flush()
+
 
 def del_function(bot: Bot, update):
     print(TAG(), "called del: ", update.message)
@@ -56,12 +58,16 @@ def del_function(bot: Bot, update):
     else:
         bot.send_message(chat_id=chat_id, text="Notifier {0} not found.".format(name))
 
+    flush()
+
 
 def clear_function(bot: Bot, update):
     print(TAG(), "called clear: ", update.message)
     chat_id = update.message.chat_id
     watcher_manager.clear_watcher(chat_id)
     bot.send_message(chat_id=chat_id, text="All notifiers are deleted")
+
+    flush()
 
 
 def list_function(bot: Bot, update):
@@ -75,6 +81,8 @@ def list_function(bot: Bot, update):
     else:
         text = "No notifiers available"
     bot.send_message(chat_id=chat_id, text=text)
+
+    flush()
 
 
 def start_function(bot, update):
@@ -93,6 +101,8 @@ def start_function(bot, update):
     else:
         bot.send_message(chat_id=chat_id, text="Insert the notifier name that you want to start")
 
+    flush()
+
 
 def stop_function(bot, update):
     print(TAG(), "called stop: ", update.message)
@@ -110,6 +120,8 @@ def stop_function(bot, update):
     else:
         bot.send_message(chat_id=chat_id, text="Insert the notifier name that you want to start")
 
+    flush()
+
 
 def backup():
     while True:
@@ -117,6 +129,8 @@ def backup():
         print(TAG(), "thread_backup:", "START BACKUP ROUTINE")
         watcher_manager.save_watchers()
         print(TAG(), "thread_backup:", "BACKUP COMPLETED")
+
+        flush()
 
 
 updater = Updater(token=TOKEN)
@@ -137,6 +151,8 @@ watcher_manager.start()
 # start telegram
 updater.start_polling()
 print(TAG(), "Bot started!")
+
+flush()
 
 # start idle
 updater.idle()

@@ -5,9 +5,7 @@ from selenium import webdriver
 import joblib
 
 import Watcher
-
-PATH_PHANTOM = open("path_phantom_js.txt").read().strip()
-TIMER = 2
+from utils import TAG, PATH_PHANTOM, TIMER
 
 
 class WatcherManager:
@@ -134,12 +132,12 @@ class WatcherManager:
 
 # routine that actually do the watcher job
 def thread_function(watchers_manager: WatcherManager):
-    LOG = "thread_w:"
-    print(LOG, "started")
+    LOG = "thread_watchers:"
+    print(TAG(), LOG, "started")
     while True:
         # acquire lock
         watchers_manager.watchers_lock.acquire()
-        print(LOG, "start updating watchers")
+        print(TAG(), LOG, "start updating watchers")
         try:
             # start selenium browser
             browser = webdriver.PhantomJS(executable_path=PATH_PHANTOM)
@@ -162,9 +160,11 @@ def thread_function(watchers_manager: WatcherManager):
                                 watcher.update.message.\
                                     reply_text("Notifier {0} has seen new changes! Go to see them:\n{1}"
                                                .format(watcher.name, watcher.url))
-                                print(LOG, "updated watcher {0}".format(watcher.name))
+                                print(TAG(), LOG, "updated watcher {0}: change saved!".format(watcher.name))
+                            else:
+                                print(TAG(), LOG, "watcher {0} checked -> no changes".format(watcher.name))
             browser.close()
-            print(LOG, "checked every running watcher")
+            print(TAG(), LOG, "checked every running watcher")
         except Exception as e:
             print(LOG, e, file=sys.stderr)
         finally:

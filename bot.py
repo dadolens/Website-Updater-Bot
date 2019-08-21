@@ -6,6 +6,7 @@ from telegram.ext import Updater, CommandHandler
 
 from WatcherManager import WatcherManager
 from Watcher import Watcher, Selector
+from utils import TAG
 
 file = open("token.txt", "r")
 TOKEN = file.read().strip()
@@ -15,6 +16,7 @@ watcher_manager = WatcherManager()
 
 
 def set_function(bot: Bot, update: Update):
+    print(TAG(), "called set: ", update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 2:
@@ -39,6 +41,7 @@ def set_function(bot: Bot, update: Update):
 
 
 def del_function(bot: Bot, update):
+    print(TAG(), "called del: ", update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 2:
@@ -55,12 +58,14 @@ def del_function(bot: Bot, update):
 
 
 def clear_function(bot: Bot, update):
+    print(TAG(), "called clear: ", update.message)
     chat_id = update.message.chat_id
     watcher_manager.clear_watcher(chat_id)
     bot.send_message(chat_id=chat_id, text="All notifiers are deleted")
 
 
 def list_function(bot: Bot, update):
+    print(TAG(), "called list: ", update.message)
     chat_id = update.message.chat_id
     watchers = watcher_manager.get_watchers(chat_id)
     if len(watchers) > 0:
@@ -73,6 +78,7 @@ def list_function(bot: Bot, update):
 
 
 def start_function(bot, update):
+    print(TAG(), "called start: ", update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:
@@ -89,6 +95,7 @@ def start_function(bot, update):
 
 
 def stop_function(bot, update):
+    print(TAG(), "called stop: ", update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:
@@ -107,7 +114,9 @@ def stop_function(bot, update):
 def backup():
     while True:
         time.sleep(60)
+        print(TAG(), "thread_backup:", "START BACKUP ROUTINE")
         watcher_manager.save_watchers()
+        print(TAG(), "thread_backup:", "BACKUP COMPLETED")
 
 
 updater = Updater(token=TOKEN)
@@ -127,7 +136,7 @@ watcher_manager.start()
 
 # start telegram
 updater.start_polling()
-print("Bot started!")
+print(TAG(), "Bot started!")
 
 # start idle
 updater.idle()

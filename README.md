@@ -21,3 +21,19 @@ in the main directory of the project. The file must contain <b>ONLY</b> the path
 ### Telegram Bot API Token
 To make the bot works, you need to create the file ```token.txt``` in the main directory of the project and
 write in it the bot api token. The file must contains <b>ONLY</b> the token and nothing else.
+
+
+### Bot commands
+- set: ```/set NAME URL [SELECTOR]``` create a new watcher.
+    - NAME is the identifier of your watcher. It must be unique.
+    - URL is the url to watch.
+    - SELECTOR is the CSS selector that identifies what you want to watch in the URL page. It could represents one or more elements. If it's not provided, the bot will watch the entire web page.
+- del: ```/del NAME``` delete an existing watcher.
+    - NAME is the identifier of the watcher that you want to delete.
+- clear: ```/clear``` delete all the existing watchers.
+- list: ```/list``` show the list of all the existing watchers and their information.
+- start: ```/start NAME``` start a stopped watcher.
+    - NAME is the identifier of the watcher that you want to start.
+- stop: ```/stop NAME``` stop a running watcher.
+    - NAME is the identifier of the watcher that you want to stop.
+

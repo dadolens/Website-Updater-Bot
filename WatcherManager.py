@@ -1,8 +1,9 @@
 import sys
 import time
 from threading import Lock, Thread
-from selenium import webdriver
+from urllib import request
 import joblib
+from bs4 import BeautifulSoup
 
 import Watcher
 from utils import TAG, PATH_PHANTOM, TIMER, flush
@@ -139,18 +140,17 @@ def thread_function(watchers_manager: WatcherManager):
         watchers_manager.watchers_lock.acquire()
         print(TAG(), LOG, "start updating watchers")
         try:
-            # start selenium browser
-            browser = webdriver.PhantomJS(executable_path=PATH_PHANTOM)
             # for each watcher
             for user_watchers in watchers_manager.watchers.values():
                 for watcher in user_watchers:
                     if watcher.isRunning:
-                        browser.get(watcher.url)
+                        html = request.urlopen(watcher.url).read().decode("utf8")
+                        soup = BeautifulSoup(html, 'html.parser')
                         if watcher.type == Watcher.Selector.CSS:
-                            elements = browser.find_elements_by_css_selector(watcher.selector)
+                            elements = soup.select(watcher.selector)
                             text = "".join([element.text for element in elements])
                         else:
-                            text = browser.find_element_by_css_selector('body').text
+                            text = soup.find('body').text
 
                         if watcher.old_text is None:
                             watcher.old_text = text
@@ -163,7 +163,6 @@ def thread_function(watchers_manager: WatcherManager):
                                 print(TAG(), LOG, "updated watcher {0}: change saved!".format(watcher.name))
                             else:
                                 print(TAG(), LOG, "watcher {0} checked -> no changes".format(watcher.name))
-            browser.close()
             print(TAG(), LOG, "checked every running watcher")
         except Exception as e:
             print(LOG, e, file=sys.stderr)

@@ -146,13 +146,12 @@ def thread_function(watchers_manager: WatcherManager):
                     if watcher.isRunning:
                         try:
                             html = request.urlopen(watcher.url).read().decode("utf8")
-                            soup = BeautifulSoup(html, 'html.parser')
                             if watcher.type == Watcher.Selector.CSS:
+                                soup = BeautifulSoup(html, 'html.parser')
                                 elements = soup.select(watcher.selector)
                                 text = "".join([element.text for element in elements])
                             else:
-                                text = soup.find('body').text
-
+                                text = html
                             if watcher.old_text is None:
                                 watcher.old_text = text
                             else:
@@ -164,11 +163,11 @@ def thread_function(watchers_manager: WatcherManager):
                                     print(TAG(), LOG, "updated watcher {0}: change saved!".format(watcher.name))
                                 else:
                                     print(TAG(), LOG, "watcher {0} checked -> no changes".format(watcher.name))
-                                    watcher.update.message.\
-                                        reply_text("Error with {0}. Please check if all the inserted data are correct"
-                                                   .format(watcher.name))
                         except Exception as e:
                             print(TAG(), LOG, "error while trying to update watcher {0}\n{1}".format(watcher.name, e))
+                            watcher.update.message. \
+                                reply_text("Error with {0}. Please check if all the inserted data are correct"
+                                           .format(watcher.name))
             print(TAG(), LOG, "checked every running watcher")
         except Exception as e:
             print(LOG, e, file=sys.stderr)

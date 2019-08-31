@@ -6,7 +6,7 @@ import joblib
 from bs4 import BeautifulSoup
 
 import Watcher
-from utils import TAG, PATH_PHANTOM, TIMER, flush
+from utils import TAG, TIMER, flush
 
 
 class WatcherManager:
@@ -144,25 +144,31 @@ def thread_function(watchers_manager: WatcherManager):
             for user_watchers in watchers_manager.watchers.values():
                 for watcher in user_watchers:
                     if watcher.isRunning:
-                        html = request.urlopen(watcher.url).read().decode("utf8")
-                        soup = BeautifulSoup(html, 'html.parser')
-                        if watcher.type == Watcher.Selector.CSS:
-                            elements = soup.select(watcher.selector)
-                            text = "".join([element.text for element in elements])
-                        else:
-                            text = soup.find('body').text
-
-                        if watcher.old_text is None:
-                            watcher.old_text = text
-                        else:
-                            if watcher.old_text != text:
-                                watcher.old_text = text
-                                watcher.update.message.\
-                                    reply_text("Notifier {0} has seen new changes! Go to see them:\n{1}"
-                                               .format(watcher.name, watcher.url))
-                                print(TAG(), LOG, "updated watcher {0}: change saved!".format(watcher.name))
+                        try:
+                            html = request.urlopen(watcher.url).read().decode("utf8")
+                            soup = BeautifulSoup(html, 'html.parser')
+                            if watcher.type == Watcher.Selector.CSS:
+                                elements = soup.select(watcher.selector)
+                                text = "".join([element.text for element in elements])
                             else:
-                                print(TAG(), LOG, "watcher {0} checked -> no changes".format(watcher.name))
+                                text = soup.find('body').text
+
+                            if watcher.old_text is None:
+                                watcher.old_text = text
+                            else:
+                                if watcher.old_text != text:
+                                    watcher.old_text = text
+                                    watcher.update.message.\
+                                        reply_text("Notifier {0} has seen new changes! Go to see them:\n{1}"
+                                                   .format(watcher.name, watcher.url))
+                                    print(TAG(), LOG, "updated watcher {0}: change saved!".format(watcher.name))
+                                else:
+                                    print(TAG(), LOG, "watcher {0} checked -> no changes".format(watcher.name))
+                                    watcher.update.message.\
+                                        reply_text("Error with {0}. Please check if all the inserted data are correct"
+                                                   .format(watcher.name))
+                        except Exception as e:
+                            print(TAG(), LOG, "error while trying to update watcher {0}\n{1}".format(watcher.name, e))
             print(TAG(), LOG, "checked every running watcher")
         except Exception as e:
             print(LOG, e, file=sys.stderr)

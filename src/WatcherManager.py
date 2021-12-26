@@ -53,6 +53,8 @@ class WatcherManager:
                 return False
             else:
                 self.watchers[chat_id] = [watcher]
+                open_tab(watcher)
+                watcher.old_text = get_value_from_watcher_selector(watcher)
                 return True
         finally:
             # release lock

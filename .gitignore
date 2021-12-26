@@ -12,3 +12,4 @@ token.*
 *.log
 
 path_phantom_js.txt
+save/

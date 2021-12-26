@@ -1,7 +1,7 @@
 from telegram.ext import Updater
 
 from model import Selector
-from src.config import TOKEN
+from config import TOKEN
 
 
 class Watcher:

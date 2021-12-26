@@ -24,6 +24,8 @@ Every configuration is saved in the `config.json` file, where every field must b
     - CHROMIUM
     - EDGE
     - OPERA
+- custom_driver_path
+  - Optional: the path of the webdriver to override default webdriver handler
 - timer
   - The amount of seconds to wait to check if any site is changed
 - backup_timer

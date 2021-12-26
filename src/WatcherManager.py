@@ -13,7 +13,7 @@ from webdriver_manager.opera import OperaDriverManager
 from webdriver_manager.utils import ChromeType
 
 import Watcher
-from config import SELECTED_BROWSER, SAVE_PATH, SAVE_FILE_PATH, TIMER
+from config import SELECTED_BROWSER, SAVE_PATH, SAVE_FILE_PATH, TIMER, CUSTOM_DRIVER_PATH
 from model import Browser, Selector
 from utils import print_tag, flush
 
@@ -145,17 +145,22 @@ class WatcherManager:
             return {}
 
 
-def get_webdriver(selected: Browser) -> webdriver:
+def get_webdriver(selected: Browser, custom_driver_path) -> webdriver:
     if selected == Browser.FIREFOX:
-        return webdriver.Firefox(executable_path=GeckoDriverManager().install())
+        driver = GeckoDriverManager().install() if custom_driver_path is None else custom_driver_path
+        return webdriver.Firefox(executable_path=driver)
     elif selected == Browser.CHROME:
-        return webdriver.Chrome(ChromeDriverManager().install())
+        driver = ChromeDriverManager().install() if custom_driver_path is None else custom_driver_path
+        return webdriver.Chrome(executable_path=driver)
     elif selected == Browser.CHROMIUM:
-        return webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+        driver = ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install() if custom_driver_path is None else custom_driver_path
+        return webdriver.Chrome(driver)
     elif selected == Browser.EDGE:
-        return webdriver.Edge(EdgeChromiumDriverManager().install())
+        driver = EdgeChromiumDriverManager().install() if custom_driver_path is None else custom_driver_path
+        return webdriver.Edge(driver)
     elif selected == Browser.OPERA:
-        return webdriver.Opera(executable_path=OperaDriverManager().install())
+        driver = OperaDriverManager().install() if custom_driver_path is None else custom_driver_path
+        return webdriver.Opera(executable_path=driver)
     else:
         return None
 
@@ -185,7 +190,7 @@ def get_value_from_watcher_selector(watcher: Watcher):
 
 
 # start browser
-browser = get_webdriver(SELECTED_BROWSER)
+browser = get_webdriver(SELECTED_BROWSER, CUSTOM_DRIVER_PATH)
 
 
 # routine that actually do the watcher job

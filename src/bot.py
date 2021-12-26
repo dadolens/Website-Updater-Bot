@@ -13,7 +13,7 @@ watcher_manager = WatcherManager()
 
 
 def set_function(update: Update, context: CallbackContext):
-    logger.info("called set: " + update.message)
+    logger.info("called set: " + str(update.message))
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 3:
@@ -41,7 +41,7 @@ def set_function(update: Update, context: CallbackContext):
 
 
 def del_function(update: Update, context: CallbackContext):
-    logger.info("called del: " + update.message)
+    logger.info("called del: " + str(update.message))
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 2:
@@ -60,7 +60,7 @@ def del_function(update: Update, context: CallbackContext):
 
 
 def clear_function(update: Update, context: CallbackContext):
-    logger.info("called clear: " + update.message)
+    logger.info("called clear: " + str(update.message))
     chat_id = update.message.chat_id
     watcher_manager.clear_watcher(chat_id)
     update.message.reply_text("All notifiers are deleted")
@@ -69,7 +69,7 @@ def clear_function(update: Update, context: CallbackContext):
 
 
 def list_function(update: Update, context: CallbackContext):
-    logger.info("called list: " + update.message)
+    logger.info("called list: " + str(update.message))
     chat_id = update.message.chat_id
     watchers = watcher_manager.get_watchers(chat_id)
     if len(watchers) > 0:
@@ -84,7 +84,7 @@ def list_function(update: Update, context: CallbackContext):
 
 
 def start_function(update: Update, context: CallbackContext):
-    logger.info("called start: " + update.message)
+    logger.info("called start: " + str(update.message))
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:
@@ -103,7 +103,7 @@ def start_function(update: Update, context: CallbackContext):
 
 
 def stop_function(update: Update, context: CallbackContext):
-    logger.info("called stop: " + update.message)
+    logger.info("called stop: " + str(update.message))
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:

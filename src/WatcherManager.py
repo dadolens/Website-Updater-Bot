@@ -13,9 +13,9 @@ from webdriver_manager.opera import OperaDriverManager
 from webdriver_manager.utils import ChromeType
 
 import Watcher
-from config import SELECTED_BROWSER, SAVE_PATH, SAVE_FILE_PATH, TIMER, CUSTOM_DRIVER_PATH
+from config import SELECTED_BROWSER, SAVE_PATH, SAVE_FILE_PATH, TIMER, CUSTOM_DRIVER_PATH, logger
 from model import Browser, Selector
-from utils import print_tag, flush
+from utils import flush
 
 watchers_lock = Lock()
 
@@ -140,8 +140,8 @@ class WatcherManager:
     def load_watchers():
         try:
             return joblib.load(SAVE_FILE_PATH)
-        except Exception as e:
-            print("No watchers found on disk. Clean start")
+        except Exception:
+            logger.warn("No watchers found on disk. Clean start")
             return {}
 
 
@@ -195,12 +195,12 @@ browser = get_webdriver(SELECTED_BROWSER, CUSTOM_DRIVER_PATH)
 
 # routine that actually do the watcher job
 def thread_function(watchers_manager: WatcherManager):
-    LOG = "thread_watchers:"
-    print_tag(LOG, "started")
+    log_tag = "thread_watchers: %s"
+    logger.info(log_tag, "started")
     while True:
         # acquire lock
         watchers_lock.acquire()
-        print_tag(LOG, "start updating watchers")
+        logger.info(log_tag, "start updating watchers")
         # for each watcher
         for user_watchers in watchers_manager.watchers.values():
             for watcher in user_watchers:
@@ -224,13 +224,13 @@ def thread_function(watchers_manager: WatcherManager):
                                     single_update_str = "\nTo enable the next update, please manually re-enable the watcher with\n/start {0}".format(
                                         watcher.name)
                                     message += single_update_str
-                                print_tag(LOG, "updated watcher {0}: change saved!".format(watcher.name))
+                                logger.info(log_tag, "updated watcher {0}: change saved!".format(watcher.name))
                                 watcher.send_message(message)
                             else:
-                                print_tag(LOG, "watcher {0} checked -> no changes".format(watcher.name))
-                                print_tag(LOG, "checked every running watcher")
+                                logger.info(log_tag, "watcher {0} checked -> no changes".format(watcher.name))
+                                logger.info(log_tag, "checked every running watcher")
                 except Exception as e:
-                    print_tag(LOG, e, file=sys.stderr)
+                    logger.error(log_tag, exc_info=e)
         # release lock
         watchers_lock.release()
         # wait for next iteration

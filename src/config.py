@@ -1,6 +1,7 @@
 import json
 
 from model import Browser
+from utils import setup_logging
 
 file = open("../config.json", "r")
 config = json.loads(file.read())
@@ -15,3 +16,6 @@ TIMER: int = int(config['timer'])
 BACKUP_TIMER: str = config['backup_timer']
 SAVE_PATH: str = config['save_path']
 SAVE_FILE_PATH: str = SAVE_PATH + "/watchers.pkl"
+LOG_FILE: str = config['log_path']
+
+logger = setup_logging(LOG_FILE)

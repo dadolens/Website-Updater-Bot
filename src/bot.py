@@ -6,14 +6,14 @@ from telegram.ext import Updater, CommandHandler, CallbackContext
 
 from Watcher import Watcher, Selector
 from WatcherManager import WatcherManager
-from config import TOKEN, BACKUP_TIMER
-from utils import print_tag, flush
+from config import TOKEN, BACKUP_TIMER, logger
+from utils import flush
 
 watcher_manager = WatcherManager()
 
 
 def set_function(update: Update, context: CallbackContext):
-    print_tag("called set: ", update.message)
+    logger.info("called set: " + update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 3:
@@ -33,7 +33,7 @@ def set_function(update: Update, context: CallbackContext):
     if ok:
         update.message.reply_text("Notifier {0} correctly created! (SELECTOR: '{1}' ({2}))"
                                   .format(watcher.name, watcher.selector, watcher.type))
-        print("{0}: watcher {1} created.".format(chat_id, name))
+        logger.info("{0}: watcher {1} created.".format(chat_id, name))
     else:
         update.message.reply_text("Notifier {0} already exists. Please delete it".format(name))
 
@@ -41,7 +41,7 @@ def set_function(update: Update, context: CallbackContext):
 
 
 def del_function(update: Update, context: CallbackContext):
-    print_tag("called del: ", update.message)
+    logger.info("called del: " + update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) < 2:
@@ -60,7 +60,7 @@ def del_function(update: Update, context: CallbackContext):
 
 
 def clear_function(update: Update, context: CallbackContext):
-    print_tag("called clear: ", update.message)
+    logger.info("called clear: " + update.message)
     chat_id = update.message.chat_id
     watcher_manager.clear_watcher(chat_id)
     update.message.reply_text("All notifiers are deleted")
@@ -69,7 +69,7 @@ def clear_function(update: Update, context: CallbackContext):
 
 
 def list_function(update: Update, context: CallbackContext):
-    print_tag("called list: ", update.message)
+    logger.info("called list: " + update.message)
     chat_id = update.message.chat_id
     watchers = watcher_manager.get_watchers(chat_id)
     if len(watchers) > 0:
@@ -84,7 +84,7 @@ def list_function(update: Update, context: CallbackContext):
 
 
 def start_function(update: Update, context: CallbackContext):
-    print_tag("called start: ", update.message)
+    logger.info("called start: " + update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:
@@ -103,7 +103,7 @@ def start_function(update: Update, context: CallbackContext):
 
 
 def stop_function(update: Update, context: CallbackContext):
-    print_tag("called stop: ", update.message)
+    logger.info("called stop: " + update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
     if len(args) > 1:
@@ -124,9 +124,9 @@ def stop_function(update: Update, context: CallbackContext):
 def backup():
     while True:
         time.sleep(BACKUP_TIMER)
-        print_tag("thread_backup:", "START BACKUP ROUTINE")
+        logger.info("thread_backup: START BACKUP ROUTINE")
         watcher_manager.save_watchers()
-        print_tag("thread_backup:", "BACKUP COMPLETED")
+        logger.info("thread_backup: BACKUP COMPLETED")
         flush()
 
 
@@ -147,7 +147,7 @@ watcher_manager.start()
 
 # start telegram
 updater.start_polling()
-print_tag("Bot started!")
+logger.info("Bot started!")
 
 flush()
 

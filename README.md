@@ -32,6 +32,8 @@ Every configuration is saved in the `config.json` file, where every field must b
   - The amount of seconds that passess between every run of the backup routine
 - save_path
   - The path of the folder where the backup routine saves data
+- log_path
+  - File path of the log file. Log rotation is configured to rotate daily and keep backup for 7 days
 
 
 ### Bot commands

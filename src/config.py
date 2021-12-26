@@ -1,13 +1,13 @@
 import json
 
-from src import model
+from model import Browser
 
 file = open("../config.json", "r")
 config = json.loads(file.read())
 file.close()
 
 TOKEN: str = config['token']
-SELECTED_BROWSER: model = config['browser']
+SELECTED_BROWSER: Browser = Browser[config['browser']]
 TIMER: int = int(config['timer'])
 BACKUP_TIMER: str = config['backup_timer']
 SAVE_PATH: str = config['save_path']

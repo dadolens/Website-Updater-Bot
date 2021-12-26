@@ -145,8 +145,7 @@ class WatcherManager:
             return {}
 
 
-def get_webdriver(selected_str: Browser) -> webdriver:
-    selected = Browser[selected_str]
+def get_webdriver(selected: Browser) -> webdriver:
     if selected == Browser.FIREFOX:
         return webdriver.Firefox(executable_path=GeckoDriverManager().install())
     elif selected == Browser.CHROME:

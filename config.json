@@ -2,5 +2,6 @@
   "token": "INSERT-KEY-HERE",
   "browser": "CHROME",
   "timer": 10,
+  "backup_timer": 60,
   "save_path": "save"
 }

@@ -2,8 +2,9 @@ import os
 import sys
 import time
 from threading import Lock, Thread
-from selenium import webdriver
+
 import joblib
+from selenium import webdriver
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
@@ -12,9 +13,9 @@ from webdriver_manager.opera import OperaDriverManager
 from webdriver_manager.utils import ChromeType
 
 import Watcher
+from config import SELECTED_BROWSER, SAVE_PATH, SAVE_FILE_PATH, TIMER
 from model import Browser, Selector
 from utils import print_tag, flush
-from config import SELECTED_BROWSER, SAVE_PATH, SAVE_FILE_PATH, TIMER
 
 watchers_lock = Lock()
 
@@ -46,6 +47,8 @@ class WatcherManager:
                         break
                 if ok:
                     l.append(watcher)
+                    open_tab(watcher)
+                    watcher.old_text = get_value_from_watcher_selector(watcher)
                     return True
                 return False
             else:
@@ -64,6 +67,7 @@ class WatcherManager:
                 for watcher in l:
                     if watcher.name == watcher_name:
                         pos = l.index(watcher)
+                        close_tab(watcher)
                         del l[pos]
                         return True
             return False
@@ -157,14 +161,21 @@ def get_webdriver(selected_str: Browser) -> webdriver:
         return None
 
 
-def open_tab(browser: webdriver, watcher: Watcher):
-    browser.execute_script("window.open('{0}');".format(watcher.url))
+def open_tab(watcher: Watcher):
+    browser.switch_to.new_window('tab')
+    browser.get(watcher.url)
     tab = browser.window_handles[-1]
     browser.switch_to.window(tab)
     return tab
 
 
-def get_value_from_watcher_selector(browser: webdriver.Firefox, watcher: Watcher):
+def close_tab(watcher: Watcher):
+    if watcher.browser_tab is not None:
+        browser.switch_to.window(watcher.browser_tab)
+        browser.close()
+
+
+def get_value_from_watcher_selector(watcher: Watcher):
     if watcher.type == Selector.CSS:
         elements = browser.find_elements(By.CSS_SELECTOR, watcher.selector)
         return "".join([element.text for element in elements])
@@ -174,12 +185,14 @@ def get_value_from_watcher_selector(browser: webdriver.Firefox, watcher: Watcher
         return ""
 
 
+# start browser
+browser = get_webdriver(SELECTED_BROWSER)
+
+
 # routine that actually do the watcher job
 def thread_function(watchers_manager: WatcherManager):
     LOG = "thread_watchers:"
     print_tag(LOG, "started")
-    # start browser
-    browser = get_webdriver(SELECTED_BROWSER)
     while True:
         # acquire lock
         watchers_lock.acquire()
@@ -190,19 +203,20 @@ def thread_function(watchers_manager: WatcherManager):
                 try:
                     if watcher.isRunning:
                         if watcher.browser_tab is None:
-                            watcher.browser_tab = open_tab(browser, watcher)
+                            watcher.browser_tab = open_tab(watcher)
                         else:
                             browser.switch_to.window(watcher.browser_tab)
                             browser.refresh()
-                        text: str = get_value_from_watcher_selector(browser, watcher)
+                        text: str = get_value_from_watcher_selector(watcher)
                         if watcher.old_text is None:
                             watcher.old_text = text
                         else:
                             if watcher.old_text != text:
                                 watcher.old_text = text
-                                message: str = "Notifier {0} has seen new changes! Go to see them:\n{1}".format(watcher.name, watcher.url)
+                                message: str = "Notifier {0} has seen new changes! Go to see them:\n{1}".format(
+                                    watcher.name, watcher.url)
                                 print_tag(LOG, "updated watcher {0}: change saved!".format(watcher.name))
-                                watcher.update.message.reply_text(message)
+                                watcher.send_message(message)
                             else:
                                 print_tag(LOG, "watcher {0} checked -> no changes".format(watcher.name))
                                 print_tag(LOG, "checked every running watcher")

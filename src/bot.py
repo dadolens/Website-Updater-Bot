@@ -1,12 +1,12 @@
 import time
 from threading import Thread
 
-from telegram import Bot, Update
+from telegram import Update
 from telegram.ext import Updater, CommandHandler, CallbackContext
 
-from WatcherManager import WatcherManager
 from Watcher import Watcher, Selector
-from config import TOKEN
+from WatcherManager import WatcherManager
+from config import TOKEN, BACKUP_TIMER
 from utils import print_tag, flush
 
 watcher_manager = WatcherManager()
@@ -22,7 +22,7 @@ def set_function(update: Update, context: CallbackContext):
         return
 
     name, url = args[1], args[2]
-    watcher = Watcher(name, url, False, update)
+    watcher = Watcher(name, url, False, update.message.chat_id)
     if len(args) > 3:
         watcher.selector = " ".join(args[3:])
         watcher.type = Selector.CSS
@@ -31,7 +31,7 @@ def set_function(update: Update, context: CallbackContext):
     ok = watcher_manager.add_watcher(chat_id, watcher)
     if ok:
         update.message.reply_text("Notifier {0} correctly created! (SELECTOR: '{1}' ({2}))"
-                         .format(watcher.name, watcher.selector, watcher.type))
+                                  .format(watcher.name, watcher.selector, watcher.type))
         print("{0}: watcher {1} created.".format(chat_id, name))
     else:
         update.message.reply_text("Notifier {0} already exists. Please delete it".format(name))
@@ -122,11 +122,10 @@ def stop_function(update: Update, context: CallbackContext):
 
 def backup():
     while True:
-        time.sleep(60)
+        time.sleep(BACKUP_TIMER)
         print_tag("thread_backup:", "START BACKUP ROUTINE")
         watcher_manager.save_watchers()
         print_tag("thread_backup:", "BACKUP COMPLETED")
-
         flush()
 
 
@@ -139,8 +138,8 @@ updater.dispatcher.add_handler(CommandHandler('start', start_function))
 updater.dispatcher.add_handler(CommandHandler('stop', stop_function))
 
 # set watchers backup
-# t = Thread(target=backup)
-# t.start()
+t = Thread(target=backup)
+t.start()
 
 # start watchers thread
 watcher_manager.start()

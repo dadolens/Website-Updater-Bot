@@ -9,7 +9,6 @@ file.close()
 TOKEN: str = config['token']
 SELECTED_BROWSER: model = config['browser']
 TIMER: int = int(config['timer'])
+BACKUP_TIMER: str = config['backup_timer']
 SAVE_PATH: str = config['save_path']
 SAVE_FILE_PATH: str = SAVE_PATH + "/watchers.pkl"
-
-

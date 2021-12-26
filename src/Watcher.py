@@ -1,6 +1,7 @@
-from telegram import Update
+from telegram.ext import Updater
 
 from model import Selector
+from src.config import TOKEN
 
 
 class Watcher:
@@ -10,20 +11,20 @@ class Watcher:
     selector = None
     enabled = None
     one_shot = None
-    update: Update = None
+    chat_id = None
     browser_tab = None
 
     old_text = None
     isRunning = None
 
-    def __init__(self, name, url, one_shot, update):
+    def __init__(self, name, url, one_shot, chat_id):
         self.name = name
         self.url = url
         self.selector = None
         self.type = None
         self.enabled = True
         self.one_shot = one_shot
-        self.update = update
+        self.chat_id = chat_id
         self.old_text = None
         self.isRunning = True
         self.browser_tab = None
@@ -39,7 +40,6 @@ class Watcher:
         state = self.__dict__.copy()
         # Remove the unpickable entries.
         del state['browser_tab']
-        del state['update']
         return state
 
     def __setstate__(self, state):
@@ -48,5 +48,6 @@ class Watcher:
         # Restore the unpickable entries
         self.browser_tab = None
 
-
-
+    def send_message(self, message):
+        updater = Updater(TOKEN)
+        updater.bot.sendMessage(chat_id=self.chat_id, text=message)

@@ -16,18 +16,19 @@ def set_function(update: Update, context: CallbackContext):
     print_tag("called set: ", update.message)
     chat_id = update.message.chat_id
     args = update.message.text.split(" ")
-    if len(args) < 2:
+    if len(args) < 3:
         update.message.reply_text("Invalid message. Command pattern is:")
-        update.message.reply_text("/set name URL [CSS SELECTOR]")
+        update.message.reply_text("/set name URL (single|continue) [CSS SELECTOR]")
         return
 
-    name, url = args[1], args[2]
-    watcher = Watcher(name, url, False, update.message.chat_id)
-    if len(args) > 3:
-        watcher.selector = " ".join(args[3:])
+    name, url, one_shot = args[1], args[2], args[3]
+    watcher = Watcher(name, url, one_shot == 'single', update.message.chat_id)
+    if len(args) > 4:
+        watcher.selector = " ".join(args[4:])
         watcher.type = Selector.CSS
     else:
         watcher.type = Selector.NONE
+
     ok = watcher_manager.add_watcher(chat_id, watcher)
     if ok:
         update.message.reply_text("Notifier {0} correctly created! (SELECTOR: '{1}' ({2}))"

@@ -201,7 +201,7 @@ def thread_function(watchers_manager: WatcherManager):
         for user_watchers in watchers_manager.watchers.values():
             for watcher in user_watchers:
                 try:
-                    if watcher.isRunning:
+                    if watcher.enabled:
                         if watcher.browser_tab is None:
                             watcher.browser_tab = open_tab(watcher)
                         else:
@@ -215,6 +215,11 @@ def thread_function(watchers_manager: WatcherManager):
                                 watcher.old_text = text
                                 message: str = "Notifier {0} has seen new changes! Go to see them:\n{1}".format(
                                     watcher.name, watcher.url)
+                                if watcher.one_shot:
+                                    watcher.enabled = False
+                                    single_update_str = "\nTo enable the next update, please manually re-enable the watcher with\n/start {0}".format(
+                                        watcher.name)
+                                    message += single_update_str
                                 print_tag(LOG, "updated watcher {0}: change saved!".format(watcher.name))
                                 watcher.send_message(message)
                             else:

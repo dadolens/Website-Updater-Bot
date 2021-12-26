@@ -15,7 +15,6 @@ class Watcher:
     browser_tab = None
 
     old_text = None
-    isRunning = None
 
     def __init__(self, name, url, one_shot, chat_id):
         self.name = name
@@ -26,7 +25,6 @@ class Watcher:
         self.one_shot = one_shot
         self.chat_id = chat_id
         self.old_text = None
-        self.isRunning = True
         self.browser_tab = None
 
     def __str__(self):

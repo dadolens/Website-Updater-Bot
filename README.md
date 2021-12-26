@@ -1,7 +1,7 @@
 # Website Updater Bot
 
-A telegram bot that notifies when a web page (or a piece of it) change. It uses <a href="https://phantomjs.org/">PhantomJS</a>
-to render web pages and search for differences from the last time it was checked.
+A telegram bot that notifies when a web page (or a piece of it) change. It uses Selenium Web Driver
+support browser navigation and enable checks depending on js renders.
 <br>
 
 
@@ -11,23 +11,33 @@ This bot has some dependency. To install them, run
 ```bash
 pip install -r requirements.txt
 ```
-Also, for selenium, is necessary to install PhantomJS. For more information,
-click <a href='https://phantomjs.org/download.html'>here</a>.
-<br>
-Once you have installed PhantomJS, you need to write the path to its executable in a file called ```path_phantom_js.txt```
-in the main directory of the project. The file must contain <b>ONLY</b> the path. For example, ```/bin/phantomjs/phantomjs```
+The browser drivers are automatically handled by the package `webdriver-manager`.
 
-
-### Telegram Bot API Token
-To make the bot works, you need to create the file ```token.txt``` in the main directory of the project and
-write in it the bot api token. The file must contains <b>ONLY</b> the token and nothing else.
+###Configuration
+Every configuration is saved in the `config.json` file, where every field must be setted with the following instructions:
+- token
+  - The Telegram Bot API Token. To generate one, please check the Telegram Bot documentation
+- browser
+  - The browser used by Selenium. It can be one of the following values:
+    - FIREFOX
+    - CHROME
+    - CHROMIUM
+    - EDGE
+    - OPERA
+- timer
+  - The amount of seconds to wait to check if any site is changed
+- backup_timer
+  - The amount of seconds that passess between every run of the backup routine
+- save_path
+  - The path of the folder where the backup routine saves data
 
 
 ### Bot commands
-- set: ```/set NAME URL [SELECTOR]``` create a new watcher.
-    - NAME is the identifier of your watcher. It must be unique.
-    - URL is the url to watch.
-    - SELECTOR is the CSS selector that identifies what you want to watch in the URL page. It could represents one or more elements. If it's not provided, the bot will watch the entire web page.
+- set: ```/set NAME URL (single|continue) [SELECTOR]``` create a new watcher.
+    - `NAME` is the identifier of your watcher. It must be unique.
+    - `URL` is the url to watch.
+    - `single|continue` setup if the watcher still continue to check updates after the first change
+    - `SELECTOR` is the CSS selector that identifies what you want to watch in the URL page. It could represents one or more elements. If it's not provided, the bot will watch the entire web page.
 - del: ```/del NAME``` delete an existing watcher.
     - NAME is the identifier of the watcher that you want to delete.
 - clear: ```/clear``` delete all the existing watchers.
@@ -37,3 +47,10 @@ write in it the bot api token. The file must contains <b>ONLY</b> the token and 
 - stop: ```/stop NAME``` stop a running watcher.
     - NAME is the identifier of the watcher that you want to stop.
 
+## Future updates
+- Add support to PhantomJS to run the bot in a non-desktop environment
+- Add /help command to print info about all the bot commands
+- Add other selector, like XPath
+- Add screenshot of the changed website to the notification (if requested)
+- Support telegram button API to create watcher more easily and with better UX
+- 

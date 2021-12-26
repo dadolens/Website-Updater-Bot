@@ -53,4 +53,3 @@ Every configuration is saved in the `config.json` file, where every field must b
 - Add other selector, like XPath
 - Add screenshot of the changed website to the notification (if requested)
 - Support telegram button API to create watcher more easily and with better UX
-- 

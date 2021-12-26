@@ -9,7 +9,7 @@ to render web pages and search for differences from the last time it was checked
 This bot has some dependency. To install them, run
 
 ```bash
-pip install python-telegram-bot joblib selenium --user
+pip install -r requirements.txt
 ```
 Also, for selenium, is necessary to install PhantomJS. For more information,
 click <a href='https://phantomjs.org/download.html'>here</a>.

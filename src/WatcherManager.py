@@ -1,11 +1,22 @@
+import os
 import sys
 import time
 from threading import Lock, Thread
 from selenium import webdriver
 import joblib
+from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from webdriver_manager.opera import OperaDriverManager
+from webdriver_manager.utils import ChromeType
 
 import Watcher
-from utils import TAG, PATH_PHANTOM, TIMER, flush
+from model import Browser, Selector
+from utils import print_tag, flush
+from config import SELECTED_BROWSER, SAVE_PATH, SAVE_FILE_PATH, TIMER
+
+watchers_lock = Lock()
 
 
 class WatcherManager:
@@ -16,8 +27,6 @@ class WatcherManager:
             self.watchers = self.load_watchers()
         else:
             self.watchers: dict = watchers
-        self.watchers_lock = Lock()
-
         self.thread = None
 
     def start(self):
@@ -26,7 +35,7 @@ class WatcherManager:
 
     def add_watcher(self, chat_id, watcher: Watcher):
         # acquire lock
-        self.watchers_lock.acquire()
+        watchers_lock.acquire()
         try:
             if chat_id in self.watchers:
                 l: list = self.watchers[chat_id]
@@ -44,11 +53,11 @@ class WatcherManager:
                 return True
         finally:
             # release lock
-            self.watchers_lock.release()
+            watchers_lock.release()
 
     def delete_watcher(self, chat_id, watcher_name):
         # acquire lock
-        self.watchers_lock.acquire()
+        watchers_lock.acquire()
         try:
             if chat_id in self.watchers:
                 l: list = self.watchers[chat_id]
@@ -60,17 +69,17 @@ class WatcherManager:
             return False
         finally:
             # release lock
-            self.watchers_lock.release()
+            watchers_lock.release()
 
     def clear_watcher(self, chat_id):
         # acquire lock
-        self.watchers_lock.acquire()
+        watchers_lock.acquire()
         try:
             if chat_id in self.watchers:
                 self.watchers[chat_id].clear()
         finally:
             # release lock
-            self.watchers_lock.release()
+            watchers_lock.release()
 
     def get_watchers(self, chat_id):
         if chat_id in self.watchers:
@@ -80,7 +89,7 @@ class WatcherManager:
 
     def start_watcher(self, chat_id, watcher_name):
         # acquire lock
-        self.watchers_lock.acquire()
+        watchers_lock.acquire()
         try:
             if chat_id in self.watchers:
                 for watcher in self.watchers[chat_id]:
@@ -93,11 +102,11 @@ class WatcherManager:
             return "not exist"
         finally:
             # release lock
-            self.watchers_lock.release()
+            watchers_lock.release()
 
     def stop_watcher(self, chat_id, watcher_name):
         # acquire lock
-        self.watchers_lock.acquire()
+        watchers_lock.acquire()
         try:
             if chat_id in self.watchers:
                 for watcher in self.watchers[chat_id]:
@@ -110,66 +119,97 @@ class WatcherManager:
             return "not exist"
         finally:
             # release lock
-            self.watchers_lock.release()
+            watchers_lock.release()
 
     def save_watchers(self):
         # acquire lock
-        self.watchers_lock.acquire()
+        if not os.path.isdir(SAVE_PATH):
+            os.makedirs(SAVE_PATH)
+        watchers_lock.acquire()
         try:
-            joblib.dump(self.watchers, "watchers.pkl")
+            joblib.dump(self.watchers, SAVE_FILE_PATH)
         finally:
             # release lock
-            self.watchers_lock.release()
+            watchers_lock.release()
 
     @staticmethod
     def load_watchers():
         try:
-            return joblib.load("watchers.pkl")
+            return joblib.load(SAVE_FILE_PATH)
         except Exception as e:
             print("No watchers found on disk. Clean start")
             return {}
 
 
+def get_webdriver(selected_str: Browser) -> webdriver:
+    selected = Browser[selected_str]
+    if selected == Browser.FIREFOX:
+        return webdriver.Firefox(executable_path=GeckoDriverManager().install())
+    elif selected == Browser.CHROME:
+        return webdriver.Chrome(ChromeDriverManager().install())
+    elif selected == Browser.CHROMIUM:
+        return webdriver.Chrome(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
+    elif selected == Browser.EDGE:
+        return webdriver.Edge(EdgeChromiumDriverManager().install())
+    elif selected == Browser.OPERA:
+        return webdriver.Opera(executable_path=OperaDriverManager().install())
+    else:
+        return None
+
+
+def open_tab(browser: webdriver, watcher: Watcher):
+    browser.execute_script("window.open('{0}');".format(watcher.url))
+    tab = browser.window_handles[-1]
+    browser.switch_to.window(tab)
+    return tab
+
+
+def get_value_from_watcher_selector(browser: webdriver.Firefox, watcher: Watcher):
+    if watcher.type == Selector.CSS:
+        elements = browser.find_elements(By.CSS_SELECTOR, watcher.selector)
+        return "".join([element.text for element in elements])
+    elif watcher.type == Selector.NONE:
+        return browser.find_element(By.TAG_NAME, 'body').text
+    else:
+        return ""
+
+
 # routine that actually do the watcher job
 def thread_function(watchers_manager: WatcherManager):
     LOG = "thread_watchers:"
-    print(TAG(), LOG, "started")
+    print_tag(LOG, "started")
+    # start browser
+    browser = get_webdriver(SELECTED_BROWSER)
     while True:
         # acquire lock
-        watchers_manager.watchers_lock.acquire()
-        print(TAG(), LOG, "start updating watchers")
-        try:
-            # start selenium browser
-            browser = webdriver.PhantomJS(executable_path=PATH_PHANTOM)
-            # for each watcher
-            for user_watchers in watchers_manager.watchers.values():
-                for watcher in user_watchers:
+        watchers_lock.acquire()
+        print_tag(LOG, "start updating watchers")
+        # for each watcher
+        for user_watchers in watchers_manager.watchers.values():
+            for watcher in user_watchers:
+                try:
                     if watcher.isRunning:
-                        browser.get(watcher.url)
-                        if watcher.type == Watcher.Selector.CSS:
-                            elements = browser.find_elements_by_css_selector(watcher.selector)
-                            text = "".join([element.text for element in elements])
+                        if watcher.browser_tab is None:
+                            watcher.browser_tab = open_tab(browser, watcher)
                         else:
-                            text = browser.find_element_by_css_selector('body').text
-
+                            browser.switch_to.window(watcher.browser_tab)
+                            browser.refresh()
+                        text: str = get_value_from_watcher_selector(browser, watcher)
                         if watcher.old_text is None:
                             watcher.old_text = text
                         else:
                             if watcher.old_text != text:
                                 watcher.old_text = text
-                                watcher.update.message.\
-                                    reply_text("Notifier {0} has seen new changes! Go to see them:\n{1}"
-                                               .format(watcher.name, watcher.url))
-                                print(TAG(), LOG, "updated watcher {0}: change saved!".format(watcher.name))
+                                message: str = "Notifier {0} has seen new changes! Go to see them:\n{1}".format(watcher.name, watcher.url)
+                                print_tag(LOG, "updated watcher {0}: change saved!".format(watcher.name))
+                                watcher.update.message.reply_text(message)
                             else:
-                                print(TAG(), LOG, "watcher {0} checked -> no changes".format(watcher.name))
-            browser.close()
-            print(TAG(), LOG, "checked every running watcher")
-        except Exception as e:
-            print(LOG, e, file=sys.stderr)
-        finally:
-            # release lock
-            watchers_manager.watchers_lock.release()
-            # wait for next iteration
+                                print_tag(LOG, "watcher {0} checked -> no changes".format(watcher.name))
+                                print_tag(LOG, "checked every running watcher")
+                except Exception as e:
+                    print_tag(LOG, e, file=sys.stderr)
+        # release lock
+        watchers_lock.release()
+        # wait for next iteration
         flush()
         time.sleep(TIMER)

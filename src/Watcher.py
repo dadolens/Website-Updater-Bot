@@ -1,0 +1,52 @@
+from telegram import Update
+
+from model import Selector
+
+
+class Watcher:
+    name = ""
+    url = ""
+    type: Selector = None
+    selector = None
+    enabled = None
+    one_shot = None
+    update: Update = None
+    browser_tab = None
+
+    old_text = None
+    isRunning = None
+
+    def __init__(self, name, url, one_shot, update):
+        self.name = name
+        self.url = url
+        self.selector = None
+        self.type = None
+        self.enabled = True
+        self.one_shot = one_shot
+        self.update = update
+        self.old_text = None
+        self.isRunning = True
+        self.browser_tab = None
+
+    def __str__(self):
+        type_str = "{0}({1})".format(self.selector, str(self.type)) if self.selector is not None else str(self.type)
+        return "{0}: ({1}) {2}".format(self.name, self.url, type_str)
+
+    def __getstate__(self):
+        # Copy the object's state from self.__dict__ which contains
+        # all our instance attributes. Always use the dict.copy()
+        # method to avoid modifying the original state.
+        state = self.__dict__.copy()
+        # Remove the unpickable entries.
+        del state['browser_tab']
+        del state['update']
+        return state
+
+    def __setstate__(self, state):
+        # Restore instance attributes
+        self.__dict__.update(state)
+        # Restore the unpickable entries
+        self.browser_tab = None
+
+
+

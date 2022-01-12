@@ -9,7 +9,7 @@ class Watcher:
     url = ""
     type: Selector = None
     selector = None
-    enabled = None
+    is_running = True
     one_shot = None
     chat_id = None
     browser_tab = None
@@ -21,7 +21,7 @@ class Watcher:
         self.url = url
         self.selector = None
         self.type = None
-        self.enabled = True
+        self.is_running = True
         self.one_shot = one_shot
         self.chat_id = chat_id
         self.old_text = None

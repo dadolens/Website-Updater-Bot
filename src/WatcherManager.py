@@ -100,8 +100,8 @@ class WatcherManager:
             if chat_id in self.watchers:
                 for watcher in self.watchers[chat_id]:
                     if watcher.name == watcher_name:
-                        if not watcher.isRunning:
-                            watcher.isRunning = True
+                        if not watcher.is_running:
+                            watcher.is_running = True
                             return "started"
                         else:
                             return "already"
@@ -117,8 +117,8 @@ class WatcherManager:
             if chat_id in self.watchers:
                 for watcher in self.watchers[chat_id]:
                     if watcher.name == watcher_name:
-                        if watcher.isRunning:
-                            watcher.isRunning = False
+                        if watcher.is_running:
+                            watcher.is_running = False
                             return "stopped"
                         else:
                             return "already"
@@ -207,7 +207,7 @@ def thread_function(watchers_manager: WatcherManager):
         for user_watchers in watchers_manager.watchers.values():
             for watcher in user_watchers:
                 try:
-                    if watcher.enabled:
+                    if watcher.is_running:
                         if watcher.browser_tab is None:
                             watcher.browser_tab = open_tab(watcher)
                         else:
@@ -222,7 +222,7 @@ def thread_function(watchers_manager: WatcherManager):
                                 message: str = "Notifier {0} has seen new changes! Go to see them:\n{1}".format(
                                     watcher.name, watcher.url)
                                 if watcher.one_shot:
-                                    watcher.enabled = False
+                                    watcher.is_running = False
                                     single_update_str = "\nTo enable the next update, please manually re-enable the watcher with\n/start {0}".format(
                                         watcher.name)
                                     message += single_update_str

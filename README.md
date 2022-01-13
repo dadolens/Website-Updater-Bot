@@ -5,6 +5,12 @@ support browser navigation and enable checks depending on js renders.
 <br>
 
 
+## Deploying your own
+
+#### The Easiest Way [Heroku ONLY 👾]
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
 ### Requirements
 This bot has some dependency. To install them, run
 

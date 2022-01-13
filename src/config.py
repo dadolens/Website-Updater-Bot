@@ -3,7 +3,7 @@ import json
 from model import Browser
 from utils import setup_logging
 
-file = open("../config.json", "r")
+file = open("/app/src/config.json", "r")
 config = json.loads(file.read())
 file.close()
 

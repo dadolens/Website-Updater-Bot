@@ -1,4 +1,4 @@
 python-telegram-bot==13.9
-joblib==1.1.0
+joblib==1.2.0
 selenium==4.1.0
 webdriver-manager==3.5.2

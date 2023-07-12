@@ -1,0 +1,23 @@
+{
+    "name": "Fortytele",
+    "logo": "https://telegra.ph//file/7db6d5303399b8a92bb95.jpg",
+    "description": "App for SSC updates",
+    "keywords": [
+        "SSC",
+        "telegram",
+        "updates"
+    ],
+    "repository": "https://github.com/craziks-creator/",
+    "stack": "heroku-20",
+    "buildpacks": [
+        {
+            "url": "heroku/python"
+        }
+    ],
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "free"
+        }
+    }
+}
